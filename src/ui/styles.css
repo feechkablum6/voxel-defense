@@ -347,8 +347,31 @@ body.dragging-tower * {
   background: linear-gradient(#aee8ff 0 50%, #4d9cc9 50%);
 }
 
-.wave-action {
+.wave-controls {
   margin-top: auto;
+  display: grid;
+  gap: 8px;
+}
+
+.wave-timer {
+  position: relative;
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 232, 184, 0.12);
+  border-radius: 6px;
+  color: #f5d38a;
+  background: #263024;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.wave-timer.hidden {
+  visibility: hidden;
+}
+
+.wave-action {
   width: 100%;
 }
 

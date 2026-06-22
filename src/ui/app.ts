@@ -47,7 +47,10 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
           <div data-tip="Волна"><span data-i18n="wave">Волна</span><strong data-value="wave">0</strong></div>
         </div>
         <div class="tower-list" data-towers></div>
-        <button class="wave-action" data-action="wave" data-i18n="wave" data-tip="Начать раньше">Волна</button>
+        <div class="wave-controls">
+          <div class="wave-timer hidden" data-wave-timer data-tip="Автостарт">Авто: 8с</div>
+          <button class="wave-action" data-action="wave" data-i18n="wave" data-tip="Начать раньше">Волна</button>
+        </div>
       </aside>
     </main>
   `;
@@ -116,6 +119,7 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
   }
 
   function update(): void {
+    const text = copy(language);
     setText(root, 'coins', state.coins.toString());
     setText(root, 'hp', state.baseHp.toString());
     setText(root, 'wave', state.wave.toString());
@@ -125,10 +129,13 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
     const waveButton = root.querySelector<HTMLButtonElement>('[data-action="wave"]');
     if (waveButton) {
       waveButton.disabled = state.phase !== 'playing' || state.waveState === 'active';
-      waveButton.textContent =
-        state.waveState === 'between'
-          ? `${copy(language).wave} ${Math.ceil(state.nextWaveIn)}`
-          : copy(language).wave;
+      waveButton.textContent = text.wave;
+    }
+    const waveTimer = root.querySelector<HTMLElement>('[data-wave-timer]');
+    if (waveTimer) {
+      const visible = state.phase === 'playing' && state.waveState === 'between';
+      waveTimer.classList.toggle('hidden', !visible);
+      waveTimer.textContent = `${text.autoWave} ${Math.ceil(state.nextWaveIn)}с`;
     }
     for (const button of root.querySelectorAll<HTMLButtonElement>('[data-tower]')) {
       const kind = button.dataset.tower as TowerKind;
@@ -136,7 +143,7 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
     }
     root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((node) => {
       const key = node.dataset.i18n;
-      if (key && key in copy(language)) node.textContent = copy(language)[key as keyof ReturnType<typeof copy>];
+      if (key && key in text) node.textContent = text[key as keyof ReturnType<typeof copy>];
     });
     root.querySelectorAll<HTMLButtonElement>('[data-language]').forEach((node) => {
       node.classList.toggle('selected', node.dataset.language === language);
@@ -199,6 +206,7 @@ function updateTips(root: HTMLElement, language: Language): void {
   root.querySelector<HTMLElement>('[data-action="settings"]')?.setAttribute('data-tip', text.settings);
   root.querySelector<HTMLElement>('[data-action="restart"]')?.setAttribute('data-tip', text.restartTip);
   root.querySelector<HTMLElement>('[data-action="wave"]')?.setAttribute('data-tip', text.waveTip);
+  root.querySelector<HTMLElement>('[data-wave-timer]')?.setAttribute('data-tip', text.autoWaveTip);
   root.querySelectorAll<HTMLElement>('[data-tower]').forEach((button) => {
     button.setAttribute('data-tip', towerHint(button.dataset.tower as TowerKind, language));
   });
@@ -233,7 +241,9 @@ function copy(language: Language) {
       coins: 'Монеты',
       base: 'База',
       wave: 'Волна',
-      waveTip: 'Начать раньше'
+      waveTip: 'Начать раньше',
+      autoWave: 'Авто:',
+      autoWaveTip: 'До автоволны'
     },
     en: {
       play: 'Play',
@@ -245,7 +255,9 @@ function copy(language: Language) {
       coins: 'Coins',
       base: 'Base',
       wave: 'Wave',
-      waveTip: 'Start early'
+      waveTip: 'Start early',
+      autoWave: 'Auto:',
+      autoWaveTip: 'Until auto wave'
     }
   }[language];
 }
