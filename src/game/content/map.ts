@@ -1,6 +1,6 @@
 import type { Cell } from '../simulation/types';
 
-export const MAP_WIDTH = 18;
+export const MAP_WIDTH = 17;
 export const MAP_HEIGHT = 12;
 
 export const ROAD_PATH: Cell[] = [
@@ -39,4 +39,3 @@ export function isInsideMap(cell: Cell): boolean {
 export function isRoadCell(cell: Cell): boolean {
   return roadKeys.has(`${cell.x}:${cell.y}`);
 }
-

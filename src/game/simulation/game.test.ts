@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAP_WIDTH, ROAD_PATH, isInsideMap } from '../content/map';
 import { createGame, placeTower, playGame, startWave, updateGame } from './game';
 
 describe('game simulation', () => {
@@ -39,5 +40,12 @@ describe('game simulation', () => {
     }
 
     expect(game.projectiles[0]?.from).toEqual({ x: 2, y: 2 });
+  });
+
+  it('keeps the base in the free strip outside the buildable map', () => {
+    const base = ROAD_PATH[ROAD_PATH.length - 1];
+
+    expect(base.x).toBe(MAP_WIDTH);
+    expect(isInsideMap(base)).toBe(false);
   });
 });

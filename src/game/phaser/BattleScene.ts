@@ -84,8 +84,11 @@ export class BattleScene extends Phaser.Scene {
         this.add.image(point.x, point.y, key).setDisplaySize(TILE_W, TILE_H + 10).setDepth(y);
       }
     }
+    this.drawPortal();
     const base = ROAD_PATH[ROAD_PATH.length - 1];
     const point = cellToPixel(base);
+    this.add.rectangle(point.x + 22, point.y + 1, 64, 24, 0x263528).setDepth(19);
+    this.add.rectangle(point.x + 22, point.y - 7, 52, 16, 0x3b4f36).setDepth(20);
     this.add.rectangle(point.x + 22, point.y - 14, 26, 34, 0x8c5b34).setDepth(20);
     this.add.rectangle(point.x + 22, point.y - 32, 34, 12, 0xd8c17b).setDepth(21);
     this.add.rectangle(point.x + 22, point.y - 58, 68, 18, 0x1b211c).setOrigin(0.5).setDepth(120);
@@ -99,6 +102,15 @@ export class BattleScene extends Phaser.Scene {
       })
       .setOrigin(0.5)
       .setDepth(122);
+  }
+
+  private drawPortal(): void {
+    const point = cellToPixel(ROAD_PATH[0]);
+    this.add.rectangle(point.x, point.y - 12, 42, 44, 0x30233f).setDepth(25);
+    this.add.rectangle(point.x, point.y - 28, 50, 12, 0x514063).setDepth(26);
+    this.add.rectangle(point.x, point.y + 10, 50, 10, 0x1f172a).setDepth(24);
+    this.add.ellipse(point.x, point.y - 8, 24, 32, 0x7cc7ff, 0.9).setDepth(27);
+    this.add.ellipse(point.x, point.y - 8, 12, 20, 0xe1fbff, 0.7).setDepth(28);
   }
 
   private bindCustomPlacement(): void {
