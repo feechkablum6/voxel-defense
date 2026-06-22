@@ -80,6 +80,10 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
     if (!kind) return;
     event.dataTransfer?.setData('text/tower', kind);
     event.dataTransfer?.setData('text/plain', kind);
+    const preview = createDragPreview(kind);
+    document.body.append(preview);
+    event.dataTransfer?.setDragImage(preview, 27, 34);
+    window.setTimeout(() => preview.remove(), 0);
   });
 
   function update(): void {
@@ -131,6 +135,13 @@ function towerButton(kind: TowerKind): string {
 function setText(root: HTMLElement, key: string, value: string): void {
   const node = root.querySelector(`[data-value="${key}"]`);
   if (node) node.textContent = value;
+}
+
+function createDragPreview(kind: TowerKind): HTMLElement {
+  const preview = document.createElement('div');
+  preview.className = `drag-preview tower-${kind}`;
+  preview.innerHTML = '<span class="tower-icon"></span>';
+  return preview;
 }
 
 function updateTowerLabels(root: HTMLElement, language: Language): void {
