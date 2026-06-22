@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { MAP_HEIGHT, MAP_WIDTH, ROAD_PATH, isRoadCell } from '../content/map';
-import { TOWER_CONFIGS } from '../content/towers';
 import { canPlaceTower, enemyPosition, placeTower, updateGame } from '../simulation/game';
 import type { Cell, Enemy, GameState, Tower, TowerKind } from '../simulation/types';
 
@@ -12,6 +11,12 @@ const ORIGIN_Y = 38;
 type EnemyView = {
   root: Phaser.GameObjects.Container;
   hp: Phaser.GameObjects.Rectangle;
+};
+
+type TowerPointerDetail = {
+  kind: TowerKind;
+  clientX: number;
+  clientY: number;
 };
 
 export class BattleScene extends Phaser.Scene {
@@ -43,7 +48,7 @@ export class BattleScene extends Phaser.Scene {
     this.drawMap();
     this.projectileLayer = this.add.graphics().setDepth(30);
     this.hoverLayer = this.add.graphics().setDepth(40);
-    this.bindDropTarget();
+    this.bindCustomPlacement();
   }
 
   update(_time: number, delta: number): void {
@@ -82,24 +87,31 @@ export class BattleScene extends Phaser.Scene {
     this.add.rectangle(point.x + 22, point.y - 32, 34, 12, 0xd8c17b).setDepth(21);
   }
 
-  private bindDropTarget(): void {
-    const canvas = this.game.canvas;
-    canvas.addEventListener('dragover', (event) => {
-      event.preventDefault();
-      const kind = readTowerKind(event.dataTransfer);
-      if (!kind) return;
-      const cell = this.clientToCell(event.clientX, event.clientY);
-      this.state.hover = { cell, valid: canPlaceTower(this.state, kind, cell) };
+  private bindCustomPlacement(): void {
+    window.addEventListener('tower-drag-hover', (event) => {
+      const detail = (event as CustomEvent<TowerPointerDetail>).detail;
+      if (!this.isPointOnCanvas(detail.clientX, detail.clientY)) {
+        this.state.hover = null;
+        return;
+      }
+      const cell = this.clientToCell(detail.clientX, detail.clientY);
+      this.state.hover = { cell, valid: canPlaceTower(this.state, detail.kind, cell) };
     });
-    canvas.addEventListener('dragleave', () => {
+    window.addEventListener('tower-drag-drop', (event) => {
+      const detail = (event as CustomEvent<TowerPointerDetail>).detail;
+      if (this.isPointOnCanvas(detail.clientX, detail.clientY)) {
+        placeTower(this.state, detail.kind, this.clientToCell(detail.clientX, detail.clientY));
+      }
       this.state.hover = null;
     });
-    canvas.addEventListener('drop', (event) => {
-      event.preventDefault();
-      const kind = readTowerKind(event.dataTransfer);
-      if (kind) placeTower(this.state, kind, this.clientToCell(event.clientX, event.clientY));
+    window.addEventListener('tower-drag-end', () => {
       this.state.hover = null;
     });
+  }
+
+  private isPointOnCanvas(clientX: number, clientY: number): boolean {
+    const rect = this.game.canvas.getBoundingClientRect();
+    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
   }
 
   private syncTowers(): void {
@@ -187,9 +199,3 @@ export function cellToPixel(cell: Cell): { x: number; y: number } {
     y: ORIGIN_Y + cell.y * TILE_H + TILE_H / 2
   };
 }
-
-function readTowerKind(dataTransfer: DataTransfer | null): TowerKind | null {
-  const value = dataTransfer?.getData('text/tower');
-  return value && value in TOWER_CONFIGS ? (value as TowerKind) : null;
-}
-

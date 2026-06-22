@@ -1,6 +1,7 @@
 :root {
   color: #f5ead2;
   background: #0d1711;
+  --voxel-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath fill='%23f0be5a' d='M3 2h8v3h3v3h3v3h3v5h-5v-3h-3v8H8v-8H5V9H2V5h1z'/%3E%3Cpath fill='%232b2010' d='M2 1h10v3h3v3h3v3h3v7h-5v-3h-3v8H7v-8H4v-4H1V4h1zm3 4v3h3v4h3v5h1v-8h4v3h2v-1h-3V8h-3V5H9V3H4v2z'/%3E%3C/svg%3E") 3 3;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
@@ -16,10 +17,13 @@ body {
   min-width: 1024px;
   min-height: 100vh;
   overflow: hidden;
+  cursor: var(--voxel-cursor), auto;
+  user-select: none;
 }
 
 button {
   font: inherit;
+  cursor: var(--voxel-cursor), pointer;
 }
 
 .game-shell {
@@ -32,6 +36,7 @@ button {
   background:
     linear-gradient(135deg, rgba(47, 90, 52, 0.4), transparent 42%),
     #0d1711;
+  cursor: var(--voxel-cursor), auto;
 }
 
 .stage {
@@ -95,7 +100,7 @@ h1 {
   color: #2b2010;
   background: #f0be5a;
   box-shadow: 0 5px 0 #8c5b24;
-  cursor: pointer;
+  cursor: var(--voxel-cursor), pointer;
   font-weight: 800;
 }
 
@@ -149,7 +154,7 @@ h1 {
   padding: 0 10px;
   color: #d6dec9;
   background: #202820;
-  cursor: pointer;
+  cursor: var(--voxel-cursor), pointer;
   font-size: 12px;
   font-weight: 900;
 }
@@ -222,7 +227,9 @@ h1 {
   padding: 8px 10px;
   color: #f6edd2;
   background: #242b25;
-  cursor: grab;
+  cursor: var(--voxel-cursor), grab;
+  touch-action: none;
+  -webkit-user-drag: none;
 }
 
 .tower-button:disabled,
@@ -240,20 +247,92 @@ h1 {
 
 .drag-preview {
   position: fixed;
-  left: -100px;
-  top: -100px;
+  left: 0;
+  top: 0;
   width: 54px;
   height: 68px;
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: rgba(20, 26, 20, 0.2);
   pointer-events: none;
+  z-index: 1000;
 }
 
-.drag-preview .tower-icon {
-  width: 44px;
-  height: 52px;
+body.dragging-tower,
+body.dragging-tower * {
+  cursor: var(--voxel-cursor), grabbing !important;
+}
+
+.tower-model {
+  position: relative;
+  width: 48px;
+  height: 62px;
+  filter: drop-shadow(0 10px 0 rgba(0, 0, 0, 0.22));
+}
+
+.tower-model i,
+.tower-model b,
+.tower-model em {
+  position: absolute;
+  display: block;
+  content: "";
+  transform: skewY(-25deg);
+}
+
+.tower-model i {
+  left: 14px;
+  bottom: 0;
+  width: 18px;
+  height: 36px;
+  background: #8a5329;
+  box-shadow: inset -7px 0 0 rgba(0, 0, 0, 0.22);
+}
+
+.tower-model b {
+  left: 8px;
+  bottom: 31px;
+  width: 31px;
+  height: 16px;
+  background: #b97838;
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.18);
+}
+
+.tower-model em {
+  left: 16px;
+  bottom: 47px;
+  width: 18px;
+  height: 18px;
+  background: #f0df9f;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.tower-cannon .tower-model i {
+  background: #4a514c;
+}
+
+.tower-cannon .tower-model b {
+  background: #8d8175;
+}
+
+.tower-cannon .tower-model em {
+  left: 25px;
+  bottom: 48px;
+  width: 24px;
+  height: 12px;
+  background: #2f3434;
+  clip-path: none;
+}
+
+.tower-frost .tower-model i {
+  background: #287b9d;
+}
+
+.tower-frost .tower-model b {
+  background: #4ba5ca;
+}
+
+.tower-frost .tower-model em {
+  background: #d8fbff;
 }
 
 .tower-arrow .tower-icon {

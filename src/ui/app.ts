@@ -12,6 +12,7 @@ export interface UiHandle {
 export function createUi(root: HTMLElement, state: GameState): UiHandle {
   let language: Language = 'ru';
   let settingsOpen = false;
+  let activeDrag: { kind: TowerKind; preview: HTMLElement; pointerId: number } | null = null;
 
   root.innerHTML = `
     <main class="game-shell">
@@ -74,17 +75,45 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
     update();
   });
 
-  root.addEventListener('dragstart', (event) => {
-    const button = (event.target as HTMLElement).closest<HTMLElement>('[data-tower]');
-    const kind = button?.dataset.tower as TowerKind | undefined;
-    if (!kind) return;
-    event.dataTransfer?.setData('text/tower', kind);
-    event.dataTransfer?.setData('text/plain', kind);
+  root.addEventListener('pointerdown', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-tower]');
+    if (!button) return;
+    const kind = button.dataset.tower as TowerKind | undefined;
+    if (!kind || button.disabled) return;
+    event.preventDefault();
+    button.setPointerCapture(event.pointerId);
     const preview = createDragPreview(kind);
     document.body.append(preview);
-    event.dataTransfer?.setDragImage(preview, 27, 34);
-    window.setTimeout(() => preview.remove(), 0);
+    activeDrag = { kind, preview, pointerId: event.pointerId };
+    document.body.classList.add('dragging-tower');
+    moveDragPreview(preview, event.clientX, event.clientY);
+    sendTowerEvent('tower-drag-hover', kind, event);
   });
+
+  root.addEventListener('pointermove', (event) => {
+    if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
+    event.preventDefault();
+    moveDragPreview(activeDrag.preview, event.clientX, event.clientY);
+    sendTowerEvent('tower-drag-hover', activeDrag.kind, event);
+  });
+
+  root.addEventListener('pointerup', (event) => {
+    if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
+    sendTowerEvent('tower-drag-drop', activeDrag.kind, event);
+    stopTowerDrag();
+  });
+
+  root.addEventListener('pointercancel', stopTowerDrag);
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') stopTowerDrag();
+  });
+
+  function stopTowerDrag(): void {
+    activeDrag?.preview.remove();
+    activeDrag = null;
+    document.body.classList.remove('dragging-tower');
+    window.dispatchEvent(new CustomEvent('tower-drag-end'));
+  }
 
   function update(): void {
     setText(root, 'coins', state.coins.toString());
@@ -124,7 +153,7 @@ function towerButton(kind: TowerKind): string {
   const tower = TOWER_CONFIGS[kind];
   const hint = towerHint(kind, 'ru');
   return `
-    <button class="tower-button tower-${kind}" draggable="true" data-tower="${kind}" data-tip="${hint}">
+    <button class="tower-button tower-${kind}" type="button" data-tower="${kind}" data-tip="${hint}">
       <span class="tower-icon"></span>
       <span data-tower-label>${towerName(kind, 'ru')}</span>
       <strong>${tower.cost}</strong>
@@ -140,8 +169,20 @@ function setText(root: HTMLElement, key: string, value: string): void {
 function createDragPreview(kind: TowerKind): HTMLElement {
   const preview = document.createElement('div');
   preview.className = `drag-preview tower-${kind}`;
-  preview.innerHTML = '<span class="tower-icon"></span>';
+  preview.innerHTML = '<span class="tower-model"><i></i><b></b><em></em></span>';
   return preview;
+}
+
+function moveDragPreview(preview: HTMLElement, x: number, y: number): void {
+  preview.style.transform = `translate(${x - 26}px, ${y - 54}px)`;
+}
+
+function sendTowerEvent(type: string, kind: TowerKind, event: PointerEvent): void {
+  window.dispatchEvent(
+    new CustomEvent(type, {
+      detail: { kind, clientX: event.clientX, clientY: event.clientY }
+    })
+  );
 }
 
 function updateTowerLabels(root: HTMLElement, language: Language): void {
