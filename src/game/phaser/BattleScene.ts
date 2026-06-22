@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { MAP_HEIGHT, MAP_WIDTH, ROAD_PATH, isRoadCell } from '../content/map';
-import { canPlaceTower, enemyPosition, placeTower, updateGame } from '../simulation/game';
+import { BASE_MAX_HP, canPlaceTower, enemyPosition, placeTower, updateGame } from '../simulation/game';
 import type { Cell, Enemy, GameState, Tower, TowerKind } from '../simulation/types';
 
 const TILE_W = 48;
@@ -24,6 +24,8 @@ export class BattleScene extends Phaser.Scene {
   private enemyViews = new Map<number, EnemyView>();
   private projectileLayer?: Phaser.GameObjects.Graphics;
   private hoverLayer?: Phaser.GameObjects.Graphics;
+  private baseHpFill?: Phaser.GameObjects.Rectangle;
+  private baseHpText?: Phaser.GameObjects.Text;
 
   constructor(
     private readonly state: GameState,
@@ -55,6 +57,7 @@ export class BattleScene extends Phaser.Scene {
     updateGame(this.state, Math.min(delta / 1000, 0.05));
     this.syncTowers();
     this.syncEnemies();
+    this.syncBaseHp();
     this.drawProjectiles();
     this.drawHover();
     this.onTick();
@@ -85,6 +88,17 @@ export class BattleScene extends Phaser.Scene {
     const point = cellToPixel(base);
     this.add.rectangle(point.x + 22, point.y - 14, 26, 34, 0x8c5b34).setDepth(20);
     this.add.rectangle(point.x + 22, point.y - 32, 34, 12, 0xd8c17b).setDepth(21);
+    this.add.rectangle(point.x + 22, point.y - 58, 68, 18, 0x1b211c).setOrigin(0.5).setDepth(120);
+    this.baseHpFill = this.add.rectangle(point.x - 9, point.y - 58, 62, 10, 0x65c96b).setOrigin(0, 0.5).setDepth(121);
+    this.baseHpText = this.add
+      .text(point.x + 22, point.y - 59, `${BASE_MAX_HP}`, {
+        color: '#6b6b6b',
+        fontFamily: 'Arial, sans-serif',
+        fontSize: '11px',
+        fontStyle: '700'
+      })
+      .setOrigin(0.5)
+      .setDepth(122);
   }
 
   private bindCustomPlacement(): void {
@@ -164,6 +178,14 @@ export class BattleScene extends Phaser.Scene {
     return view;
   }
 
+  private syncBaseHp(): void {
+    if (!this.baseHpFill || !this.baseHpText) return;
+    const ratio = Phaser.Math.Clamp(this.state.baseHp / BASE_MAX_HP, 0, 1);
+    this.baseHpFill.width = 62 * ratio;
+    this.baseHpFill.setFillStyle(baseHpColor(ratio));
+    this.baseHpText.setText(this.state.baseHp.toString());
+  }
+
   private drawProjectiles(): void {
     const graphics = this.projectileLayer;
     if (!graphics) return;
@@ -198,4 +220,10 @@ export function cellToPixel(cell: Cell): { x: number; y: number } {
     x: ORIGIN_X + cell.x * TILE_W + TILE_W / 2,
     y: ORIGIN_Y + cell.y * TILE_H + TILE_H / 2
   };
+}
+
+function baseHpColor(ratio: number): number {
+  if (ratio > 0.6) return 0x65c96b;
+  if (ratio > 0.3) return 0xe0b64f;
+  return 0xd85a4f;
 }

@@ -43,7 +43,6 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
         <div class="brand">Voxel Defense</div>
         <div class="meters">
           <div data-tip="Монеты"><span data-i18n="coins">Монеты</span><strong data-value="coins">150</strong></div>
-          <div data-tip="HP базы"><span data-i18n="base">База</span><strong data-value="hp">100</strong></div>
           <div data-tip="Волна"><span data-i18n="wave">Волна</span><strong data-value="wave">0</strong></div>
         </div>
         <div class="tower-list" data-towers></div>
@@ -121,7 +120,6 @@ export function createUi(root: HTMLElement, state: GameState): UiHandle {
   function update(): void {
     const text = copy(language);
     setText(root, 'coins', state.coins.toString());
-    setText(root, 'hp', state.baseHp.toString());
     setText(root, 'wave', state.wave.toString());
     root.querySelector('[data-layer="menu"]')?.classList.toggle('hidden', state.phase !== 'menu');
     root.querySelector('[data-layer="gameover"]')?.classList.toggle('hidden', state.phase !== 'gameover');
@@ -239,7 +237,6 @@ function copy(language: Language) {
       restart: 'Заново',
       restartTip: 'Новая попытка',
       coins: 'Монеты',
-      base: 'База',
       wave: 'Волна',
       waveTip: 'Начать раньше',
       autoWave: 'Авто:',
@@ -253,7 +250,6 @@ function copy(language: Language) {
       restart: 'Restart',
       restartTip: 'New run',
       coins: 'Coins',
-      base: 'Base',
       wave: 'Wave',
       waveTip: 'Start early',
       autoWave: 'Auto:',

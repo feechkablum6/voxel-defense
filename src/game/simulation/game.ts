@@ -4,7 +4,7 @@ import { TOWER_CONFIGS } from '../content/towers';
 import type { Cell, Enemy, EnemyKind, GameState, PlaceResult, Point, TowerKind } from './types';
 
 const START_COINS = 150;
-const BASE_HP = 100;
+export const BASE_MAX_HP = 100;
 const BETWEEN_WAVES_SECONDS = 8;
 const PROJECTILE_LIFETIME = 0.18;
 
@@ -13,7 +13,7 @@ export function createGame(): GameState {
     phase: 'menu',
     waveState: 'idle',
     wave: 0,
-    baseHp: BASE_HP,
+    baseHp: BASE_MAX_HP,
     coins: START_COINS,
     towers: [],
     enemies: [],
@@ -159,7 +159,7 @@ function updateTowers(game: GameState, dt: number): void {
     const target = findTarget(game, tower.cell, config.range);
     if (!target) continue;
 
-    const from = cellCenter(tower.cell);
+    const from = { ...tower.cell };
     const to = enemyPosition(target);
     damageTarget(game, target, config.damage);
     if (config.splash) damageSplash(game, target, config.damage * 0.55, config.splash);
@@ -257,4 +257,3 @@ function sameCell(a: Cell, b: Cell): boolean {
 function distance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
-

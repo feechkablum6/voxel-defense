@@ -27,4 +27,17 @@ describe('game simulation', () => {
     expect(placeTower(game, 'arrow', { x: 2, y: 2 }).ok).toBe(true);
     expect(placeTower(game, 'cannon', { x: 2, y: 2 }).ok).toBe(false);
   });
+
+  it('starts projectiles from the tower cell', () => {
+    const game = createGame();
+    playGame(game);
+
+    expect(placeTower(game, 'arrow', { x: 2, y: 2 }).ok).toBe(true);
+    startWave(game);
+    for (let i = 0; i < 120 && game.projectiles.length === 0; i += 1) {
+      updateGame(game, 1 / 30);
+    }
+
+    expect(game.projectiles[0]?.from).toEqual({ x: 2, y: 2 });
+  });
 });
